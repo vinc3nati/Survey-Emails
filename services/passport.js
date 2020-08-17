@@ -24,21 +24,19 @@ passport.use(
       callbackURL: "/auth/google/callback",
       proxy: true,
     },
-    (accessToken, refreshToken, profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       //We used .then method to deal with the "promise" returned by the findOne attribute
-      User.findOne({ googleId: profile.id }).then((existingUser) => {
-        if (existingUser) {
-          //We already have the user with the given ID
-          done(null, existingUser);
-        } else {
-          // We dont have a user with a given ID so create one
-          new User({
-            googleId: profile.id,
-          })
-            .save()
-            .then((user) => done(null, user));
-        }
-      });
+      const existingUser = await User.findOne({ googleId: profile.id });
+
+      if (existingUser) {
+        //We already have the user with the given ID
+        return done(null, existingUser);
+      }
+      // We dont have a user with a given ID so create one
+      const user = await new User({
+        googleId: profile.id,
+      }).save();
+      done(null, user);
     }
   )
 );
